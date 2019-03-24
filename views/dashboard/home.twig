@@ -1,0 +1,10 @@
+{% extends '../master.twig' %}
+{% block content %}
+    <div class="container">
+        <div cass="row" style="margin-top: 50px">
+            <div class="col s12">
+                <a href="/authorize" class="waves-effect waves-light btn">{{ has_token ? 'Reauthorize' : 'Authorize' }}</a>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
+<head>
+    <title>PDF OCR</title>
+
+    <meta name="language" content="en">
+
+    {% block head %}
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    {% endblock %}
+</head>
+<body>
+    {% block header %}
+        <header>
+        </header>
+    {% endblock %}
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+    {% block footer %}
+        <footer>
+        </footer>
+    {% endblock %}
+</body>
