@@ -37,5 +37,7 @@ router.get('/', DashboardController.home);
 router.get('/authorize', DashboardController.authorize);
 router.get('/get-token', DashboardController.get_token);
 router.get('/list-files', DashboardController.list_files);
+router.post('/update-folder', DashboardController.update_folder);
+router.get('/categorization', DashboardController.categorization);
 
 module.exports = router;

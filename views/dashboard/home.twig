@@ -1,9 +1,66 @@
 {% extends '../master.twig' %}
 {% block content %}
+    <script>
+        var home = {
+            save_folder: function() {
+                $.post(
+                    '/update-folder',
+                    {
+                        incoming_folder: $('#incoming_folder').val(),
+                        output_folder: $('#output_folder').val()
+                    },
+                    function(data) {
+                        if (data.status == 'error') {
+                            return;
+                        }
+                        alert('succesfully saved!');
+                    }
+                )
+            }
+        }
+    </script>
     <div class="container">
-        <div cass="row" style="margin-top: 50px">
+        <div class="row" style="margin-top: 50px">
             <div class="col s12">
                 <a href="/authorize" class="waves-effect waves-light btn">{{ has_token ? 'Reauthorize' : 'Authorize' }}</a>
+            </div>
+            <div class="input-field col s6" style="margin-top: 50px">
+                <input placeholder="Please enter Google drive folder" id="incoming_folder" type="text" value="{{ incoming_folder }}">
+                <label for="incoming_folder">Incoming Folder</label>
+            </div>
+            <div class="input-field col s6" style="margin-top: 50px">
+                <input placeholder="Please enter Google drive folder" id="output_folder" type="text" value="{{ output_folder }}">
+                <label for="output_folder">Default Output Folder</label>
+            </div>
+            <div class="input-field col s6">
+                <button class="waves-effect waves-light btn" onclick="home.save_folder()">Save</button>
+            </div>
+        </div>
+        <div class="row" style="margin-top: 50px">
+            <div>
+                <h3 style="display: inline;">Sorting Rules</h3>
+                <button class="waves-effect waves-light btn" style="margin-left: 20px; margin-top: -20px;">Add New +</button>
+            <div class="input-field col s12">
+                <div style="display: flex;">
+                    <h4>John Doe</h4>
+                    <a class="waves-effect waves-light btn"><i class="material-icons">arrow_upward</i></a>
+                </div>
+                <div style="display: flex; line-height: 46px;">If the file 
+                    <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
+                        <select>
+                            <option value="1">Does</option>
+                            <option value="0">Does not</option>
+                        </select>
+                    </div>
+                    contain the text 
+                    <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
+                    move to
+                    <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                    <div style="width: 50px;">
+                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_upward</i></a>
+                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_downward</i></a>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

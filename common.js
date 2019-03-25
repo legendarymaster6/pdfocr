@@ -2,5 +2,4 @@ require('nocamel');
 
 db = require('./db/models');
 constant = require('./constant');
-// ai = require('./services/ai');
-// aws = require('./services/aws');
+google_drive_api = require('./services/google_drive_api');
