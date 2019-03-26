@@ -24,14 +24,16 @@ module.exports = {
                             ref_id: constant.systemconfigs.ref_id.output_folder,
                         }
                     }),
+                    db.rules.find_all()
                 ]
             })
-            .spread((token, incoming_folder, output_folder) => {                
+            .spread((token, incoming_folder, output_folder, rules) => {                
                 return res
                 .render('dashboard/home', {
                     has_token: token ? true : false,
                     incoming_folder: incoming_folder ? incoming_folder.value : '',
                     output_folder: output_folder ? output_folder.value : '',
+                    rules
                 });
             })
             .catch(err => {

@@ -2,6 +2,17 @@
 {% block content %}
     <script>
         var home = {
+            init: function() {
+                var modals = [
+                    'modal_create_rule',
+                    'modal_edit_rule',
+                ];
+                modals.forEach(function(modal) {
+                    $('.' + modal).closest('.remodal-wrapper').remove();
+                    home[modal] = $('.' + modal).remodal();
+                });
+            },
+
             save_folder: function() {
                 $.post(
                     '/update-folder',
@@ -16,8 +27,62 @@
                         alert('succesfully saved!');
                     }
                 )
+            },
+
+            open_edit: function(shft) {
+                var sorting_rule = $(shft).closest('.sorting_rule');
+                
+                $('#edit_name').val(sorting_rule.find('.rule_name').html());
+                console.log(sorting_rule.find('.select_contain').val());
+                $('#edit_is_contain').val(sorting_rule.find('.select_contain').val());
+                $('#edit_text').val(sorting_rule.find('.input_text').val());
+                $('#edit_dest').val(sorting_rule.find('.input_dest').val());
+                home.modal_edit_rule.open();
+            },
+
+            create_rule: function() {
+                var name = $('#name').val();
+                var is_contain = $('#is_contain').val();
+                var text = $('#text').val();
+                var destination = $('#destination').val();
+
+                $.post(
+                    '/create_rule',
+                    {
+                        name: name,
+                        is_contained: is_contain,
+                        text: text,
+                        destination: destination
+                    },
+                    function(data) {
+                        if (data.status == 'error') {
+                            return;
+                        }
+                        $('.sorting_rule').append(
+                            `<div style="display: flex; line-height: 46px;">If the file 
+                                <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
+                                    <select>
+                                        <option value="1">Does</option>
+                                        <option value="0">Does not</option>
+                                    </select>
+                                </div>
+                                contain the text 
+                                <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
+                                move to
+                                <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                                <div style="width: 50px;">
+                                    <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_upward</i></a>
+                                    <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_downward</i></a>
+                                </div>
+                            </div>`)
+                    }
+                )
             }
-        }
+        };
+
+        $(function() {
+            home.init();
+        });
     </script>
     <div class="container">
         <div class="row" style="margin-top: 50px">
@@ -36,30 +101,93 @@
                 <button class="waves-effect waves-light btn" onclick="home.save_folder()">Save</button>
             </div>
         </div>
-        <div class="row" style="margin-top: 50px">
+        <div class="row sorting_rule_list" style="margin-top: 50px">
             <div>
                 <h3 style="display: inline;">Sorting Rules</h3>
-                <button class="waves-effect waves-light btn" style="margin-left: 20px; margin-top: -20px;">Add New +</button>
-            <div class="input-field col s12">
+                <button class="waves-effect waves-light btn" style="margin-left: 20px; margin-top: -20px;" onclick="home.modal_create_rule.open()">Add New +</button>
+            </div>
+            {% for rule in rules %}
+            <div class="sorting_rule input-field col s12" data-id="{{ rule.rule_id }}">
                 <div style="display: flex;">
-                    <h4>John Doe</h4>
-                    <a class="waves-effect waves-light btn"><i class="material-icons">arrow_upward</i></a>
+                    <h4 class="rule_name">{{ rule.name }}</h4>
+                    <a onclick="home.open_edit(this)" style="cursor: pointer;"><i class="material-icons" style="margin-top: 30px; margin-left: 10px;">edit</i></a>
                 </div>
                 <div style="display: flex; line-height: 46px;">If the file 
                     <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
-                        <select>
-                            <option value="1">Does</option>
-                            <option value="0">Does not</option>
+                        <select class="select_contain" value="{{ rule.is_contained }}" disabled>
+                            <option value="1" {{ rule.is_contained ? 'selected' : '' }}>Does</option>
+                            <option value="0" {{ not rule.is_contained ? 'selected' : '' }}>Does not</option>
                         </select>
                     </div>
                     contain the text 
-                    <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
+                    <input class="input_text" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text" value="{{ rule.text }}" disabled>
                     move to
-                    <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                    <input class="input_dest" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination" value="{{ rule.destination }}" disabled>
                     <div style="width: 50px;">
                         <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_upward</i></a>
                         <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_downward</i></a>
                     </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="modal modal_create_rule">
+        <div class="modal-content">
+            <h4>Create A New Rule</h4>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="name" type="text">
+                    <label for="name">Name</label>
+                </div>
+                <div class="input-field col s12">
+                    <div style="display: flex; line-height: 46px;">If the file 
+                        <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
+                            <select id="is_contain">
+                                <option value="1">Does</option>
+                                <option value="0">Does not</option>
+                            </select>
+                        </div>
+                        contain the text 
+                        <input id="text" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
+                    </div>
+                    <div style="display: flex; line-height: 46px;">
+                        move to
+                        <input id="destination" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                    </div>
+                </div>
+                <div class="input-field col s12">
+                    <button class="waves-effect waves-light btn" onclick="home.create_rule()">Create</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="modal modal_edit_rule">
+        <div class="modal-content">
+            <h4>Edit Rule</h4>
+            <div class="row">
+                <div class="input-field col s12">
+                    <input id="edit_name" type="text">
+                    <label for="edit_name">Name</label>
+                </div>
+                <div class="input-field col s12">
+                    <div style="display: flex; line-height: 46px;">If the file 
+                        <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
+                            <select id="edit_is_contain">
+                                <option value="1">Does</option>
+                                <option value="0">Does not</option>
+                            </select>
+                        </div>
+                        contain the text 
+                        <input id="edit_text" class="active" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
+                    </div>
+                    <div style="display: flex; line-height: 46px;">
+                        move to
+                        <input id="edit_dest" class="active" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                    </div>
+                </div>
+                <div class="input-field col s12">
+                    <button class="waves-effect waves-light btn" onclick="home.edit_rule()">Update</button>
                 </div>
             </div>
         </div>

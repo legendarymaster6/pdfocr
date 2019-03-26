@@ -10,11 +10,22 @@
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+
         <script>
+            // remodal globals
+            window.REMODAL_GLOBALS = {
+                DEFAULTS: {
+                    hashTracking: false,
+                    closeOnEscape: false
+                }
+            };
             $(function() {
                 $('select').formSelect();
             })
         </script>
+        <link href="/lib/remodal/remodal.css" rel="stylesheet">
+        <link href="/lib/remodal/remodal-default-theme.css" rel="stylesheet">
+        <script src="/lib/remodal/remodal.min.js"></script>
     {% endblock %}
 </head>
 <body>
