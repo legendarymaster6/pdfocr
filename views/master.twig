@@ -28,7 +28,20 @@
         <script src="/lib/remodal/remodal.min.js"></script>
     {% endblock %}
 </head>
-<body>
+<body style="padding: 1px;">
+    <div id="preloader" style="position: fixed; width: 100%; height: 100%; z-index: 9999; background: #FFFFFF88; display: none;">
+        <div class="preloader-wrapper big active" style="position: absolute; left: calc(50% - 32px); top: calc(50% - 32px); z-index: 9999; background: #FFFFFF88">
+            <div class="spinner-layer spinner-blue-only">
+            <div class="circle-clipper left">
+                <div class="circle"></div>
+            </div><div class="gap-patch">
+                <div class="circle"></div>
+            </div><div class="circle-clipper right">
+                <div class="circle"></div>
+            </div>
+        </div>
+    </div>
+    </div>
     {% block header %}
         <header>
         </header>

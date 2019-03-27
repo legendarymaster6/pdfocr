@@ -40,4 +40,9 @@ router.get('/list-files', DashboardController.list_files);
 router.post('/update-folder', DashboardController.update_folder);
 router.get('/categorization', DashboardController.categorization);
 
+router.post('/update-rule', DashboardController.update_rule);
+router.post('/create-rule', DashboardController.create_rule);
+router.post('/move-rule-up', DashboardController.move_rule_up);
+router.post('/move-rule-down', DashboardController.move_rule_down);
+
 module.exports = router;

@@ -2,6 +2,7 @@
 {% block content %}
     <script>
         var home = {
+            selected_rule_id: null,
             init: function() {
                 var modals = [
                     'modal_create_rule',
@@ -29,15 +30,46 @@
                 )
             },
 
+            open_create: function(shft) {
+                $('#name').val('');
+                $('#is_contain').val(1);
+                $('#text').val('');
+                $('#dest').val('');
+
+                home.modal_create_rule.open();
+            },
+
             open_edit: function(shft) {
                 var sorting_rule = $(shft).closest('.sorting_rule');
                 
                 $('#edit_name').val(sorting_rule.find('.rule_name').html());
-                console.log(sorting_rule.find('.select_contain').val());
                 $('#edit_is_contain').val(sorting_rule.find('.select_contain').val());
                 $('#edit_text').val(sorting_rule.find('.input_text').val());
                 $('#edit_dest').val(sorting_rule.find('.input_dest').val());
+
+                $('#edit_name').next().addClass('active');
+                home.selected_rule_id = sorting_rule.attr('data-id');
                 home.modal_edit_rule.open();
+            },
+
+            update_rule: function() {
+                home.modal_edit_rule.close();
+                $.post(
+                    '/update-rule',
+                    {
+                        rule_id: home.selected_rule_id,
+                        name: $('#edit_name').val(),
+                        is_contained: $('#edit_is_contain').val(),
+                        text: $('#edit_text').val(),
+                        destination: $('#edit_dest').val()
+                    },
+                    function(data) {
+                        if (data.status == 'error') {
+                            return;
+                        }
+                        location = location.href;
+                    }
+                )
             },
 
             create_rule: function() {
@@ -47,7 +79,7 @@
                 var destination = $('#destination').val();
 
                 $.post(
-                    '/create_rule',
+                    '/create-rule',
                     {
                         name: name,
                         is_contained: is_contain,
@@ -55,30 +87,63 @@
                         destination: destination
                     },
                     function(data) {
+                        home.modal_create_rule.close();
+                        location = location.href
                         if (data.status == 'error') {
                             return;
                         }
-                        $('.sorting_rule').append(
-                            `<div style="display: flex; line-height: 46px;">If the file 
-                                <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
-                                    <select>
-                                        <option value="1">Does</option>
-                                        <option value="0">Does not</option>
-                                    </select>
-                                </div>
-                                contain the text 
-                                <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Write Text">
-                                move to
-                                <input type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
-                                <div style="width: 50px;">
-                                    <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_upward</i></a>
-                                    <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_downward</i></a>
-                                </div>
-                            </div>`)
+                    }
+                )
+            },
+
+            move_up: function(shft) {
+                var sorting_rule = $(shft).closest('.sorting_rule');
+                var index = sorting_rule.attr('data-index');
+                if (index == '1') {
+                    return;
+                }
+                $.post(
+                    '/move-rule-up',
+                    {
+                        rule_id: sorting_rule.attr('data-id')
+                    },
+                    function(data) {
+                        if (data.status == 'error') {
+                            return;
+                        }
+                        location = location.href;
+                    }
+                )
+            },
+
+            move_down: function(shft) {
+                var sorting_rule = $(shft).closest('.sorting_rule');
+                var index = sorting_rule.attr('data-index');
+                $.post(
+                    '/move-rule-down',
+                    {
+                        rule_id: sorting_rule.attr('data-id')
+                    },
+                    function(data) {
+                        if (data.status == 'error') {
+                            return;
+                        }
+                        location = location.href;
+                    }
+                )
+            },
+
+            run: function() {
+                $('#preloader').show();
+                $.get(
+                    '/categorization',
+                    {},
+                    function(data) {
+                        $('#preloader').hide();
                     }
                 )
             }
-        };
+        };  
 
         $(function() {
             home.init();
@@ -101,13 +166,18 @@
                 <button class="waves-effect waves-light btn" onclick="home.save_folder()">Save</button>
             </div>
         </div>
+        <div class="row" style="margin-top: 50px">
+            <div class="col s12">
+                <button class="waves-effect waves-light btn" onclick="home.run();">Run Categorization</button>
+            </div>
+        </div>
         <div class="row sorting_rule_list" style="margin-top: 50px">
             <div>
                 <h3 style="display: inline;">Sorting Rules</h3>
-                <button class="waves-effect waves-light btn" style="margin-left: 20px; margin-top: -20px;" onclick="home.modal_create_rule.open()">Add New +</button>
+                <button class="waves-effect waves-light btn" style="margin-left: 20px; margin-top: -20px;" onclick="home.open_create()">Add New +</button>
             </div>
             {% for rule in rules %}
-            <div class="sorting_rule input-field col s12" data-id="{{ rule.rule_id }}">
+            <div class="sorting_rule input-field col s12" data-id="{{ rule.rule_id }}" data-index="{{ rule.index }}">
                 <div style="display: flex;">
                     <h4 class="rule_name">{{ rule.name }}</h4>
                     <a onclick="home.open_edit(this)" style="cursor: pointer;"><i class="material-icons" style="margin-top: 30px; margin-left: 10px;">edit</i></a>
@@ -124,8 +194,8 @@
                     move to
                     <input class="input_dest" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination" value="{{ rule.destination }}" disabled>
                     <div style="width: 50px;">
-                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_upward</i></a>
-                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons">arrow_downward</i></a>
+                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons" onclick="home.move_up(this)">arrow_upward</i></a>
+                        <a><i style="font-size: 20px; cursor: pointer;" class="material-icons" onclick="home.move_down(this)">arrow_downward</i></a>
                     </div>
                 </div>
             </div>
@@ -143,7 +213,7 @@
                 <div class="input-field col s12">
                     <div style="display: flex; line-height: 46px;">If the file 
                         <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
-                            <select id="is_contain">
+                            <select id="is_contain" class="browser-default">
                                 <option value="1">Does</option>
                                 <option value="0">Does not</option>
                             </select>
@@ -173,7 +243,7 @@
                 <div class="input-field col s12">
                     <div style="display: flex; line-height: 46px;">If the file 
                         <div style="width: 100px; margin-left: 10px; margin-right: 10px;">
-                            <select id="edit_is_contain">
+                            <select id="edit_is_contain" class="browser-default">
                                 <option value="1">Does</option>
                                 <option value="0">Does not</option>
                             </select>
@@ -187,7 +257,7 @@
                     </div>
                 </div>
                 <div class="input-field col s12">
-                    <button class="waves-effect waves-light btn" onclick="home.edit_rule()">Update</button>
+                    <button class="waves-effect waves-light btn" onclick="home.update_rule()">Update</button>
                 </div>
             </div>
         </div>

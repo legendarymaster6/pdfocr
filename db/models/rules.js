@@ -12,6 +12,7 @@ module.exports = function(sequelize, DataTypes) {
             is_contained: DataTypes.INTEGER,
             text: DataTypes.STRING(256),
             destination: DataTypes.STRING(256),
+            index: DataTypes.INTEGER,
             created_at: DataTypes.DATE,
             updated_at: DataTypes.DATE
         },

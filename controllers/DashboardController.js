@@ -24,7 +24,9 @@ module.exports = {
                             ref_id: constant.systemconfigs.ref_id.output_folder,
                         }
                     }),
-                    db.rules.find_all()
+                    db.rules.find_all({
+                        order: ['index']
+                    })
                 ]
             })
             .spread((token, incoming_folder, output_folder, rules) => {                
@@ -43,7 +45,7 @@ module.exports = {
     },
 
     authorize(req, res) {
-        const SCOPES = ['https://www.googleapis.com/auth/drive.metadata.readonly'];
+        const SCOPES = ['https://www.googleapis.com/auth/drive'];
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
@@ -138,7 +140,7 @@ module.exports = {
                         } else {
                             console.log('No files found.');
                         }
-                    })
+                    });
             })
     },
 
@@ -190,6 +192,7 @@ module.exports = {
 
     categorization(req, res) {
         var incoming_folder, output_folder;
+        var incoming_id, output_id;
         return q.fcall(() => {})
             .then(() => {
                 return [
@@ -203,24 +206,191 @@ module.exports = {
                             ref_id: constant.systemconfigs.ref_id.output_folder,
                         }
                     }),
-                    google_drive_api.get_folder_tree()
+                    google_drive_api.get_folders(),
+                    db.rules.find_all({
+                        order: ['index']
+                    })
                 ]
             })
-            .spread((incoming, output, tree) => {
+            .spread((incoming, output, folders, rules) => {
                 if (!incoming || !output) {
                     throw 'Action not allowed';
                 }
                 incoming_folder = incoming.value;
                 output_folder = output.value;
-
-                return google_drive_api.get_folders();
-            })
-            .then(folders => {
                 incoming_id = google_drive_api.get_folder_id(folders, incoming_folder);
                 output_id = google_drive_api.get_folder_id(folders, output_folder);
-                
-                console.log(tree);
-                return res.redirect('/');
+                if (!incoming_id) {
+                    throw 'No such incomming folder';
+                }
+                if (!output_id) {
+                    throw 'No such output folder';
+                }
+                console.log(incoming_id);
+                console.log(output_id);
+                let p = Promise.resolve();
+                for (let rule of rules) {
+                    p = p.then(() => {
+                            return google_drive_api.get_files(incoming_id, rule.text, rule.is_contained)
+                        })
+                        .then(files => {
+                            var push_folder = output_id;
+                            if (rule.destination) {
+                                var dest_id = google_drive_api.get_folder_id(folders, rule.destination);
+                                if (dest_id) {
+                                    push_folder = dest_id;
+                                }
+                            }
+                            let chain = Promise.resolve();
+                            for (let file of files) {
+                                chain = chain.then(() => {
+                                    return google_drive_api.move_file(file.id, file.parents[0], push_folder)
+                                });
+                            }
+                            return chain;
+                        });
+                }
+                return p;
+            })
+            .then(() => {
+                return res.send({
+                    status: 'ok'
+                })
+            })
+            .catch(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error',
+                    payload: {
+                        message: error.message || error
+                    }
+                });
+            })
+    },
+
+    update_rule(req, res) {
+        var { name, is_contained, text, destination, rule_id } = req.body;
+
+        return db.rules.find_one({
+                where: {
+                    rule_id
+                }
+            })
+            .then(rule => {
+                rule.name = name;
+                rule.is_contained = is_contained;
+                rule.text = text;
+                rule.destination = destination
+                return rule.save();
+            })
+            .then(_ => {
+                return res
+                    .send({
+                        status: 'ok'
+                    })
+            })
+            .then(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error'
+                })
+            })
+    },
+
+    create_rule(req, res) {
+        var { name, is_contained, text, destination } = req.body;
+        return db.rules.count()
+            .then(count => {
+                return db.rules.create({
+                        name,
+                        is_contained,
+                        text,
+                        destination,
+                        index: count + 1
+                    });
+            })
+            .then(rule => {
+                return res.send({
+                    status: 'ok',
+                    payload: rule
+                })
+            })
+            .then(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error'
+                })
+            })
+    },
+
+    move_rule_up(req, res) {
+        var { rule_id } = req.body;
+
+        return db.rules.find_one({
+                where: {
+                    rule_id
+                }
+            })
+            .then(rule => {
+                if (rule.index == 1) throw 'Action not allowed';
+                return db.rules.find_one({
+                        where: {
+                            index: rule.index - 1
+                        }
+                    })
+                    .then(rule_up => { 
+                        rule.index = rule.index - 1;
+                        rule_up.index = rule_up.index + 1;
+                        rule.save();
+                        rule_up.save();
+                    })
+            })
+            .then(() => {
+                return res.send({
+                    status: 'ok'
+                })
+            })
+            .catch(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error'
+                })
+            })
+    },
+
+    move_rule_down(req, res) {
+        var { rule_id } = req.body;
+
+        return db.rules.find_one({
+                where: {
+                    rule_id
+                }
+            })
+            .then(rule => {
+                return db.rules.find_one({
+                        where: {
+                            index: rule.index + 1
+                        }
+                    })
+                    .then(rule_down => {
+                        if (!rule_down) throw 'action not allowed';
+                        rule.index = rule.index + 1;
+                        rule_down.index = rule_down.index - 1;
+                        rule.save();
+                        rule_down.save();
+                    })
+            })
+            .then(() => {
+                return res.send({
+                    status: 'ok'
+                })
+            })
+            .catch(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error'
+                })
             })
     }
+
 }
