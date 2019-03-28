@@ -46,10 +46,11 @@ module.exports = {
 
     authorize(req, res) {
         const SCOPES = ['https://www.googleapis.com/auth/drive'];
+        console.log(process.env.NODE_ENV);
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
-            'http://localhost:3000/get-token'
+            process.env.NODE_ENV == 'development' ? 'http://localhost:3000/get-token' : 'http://134.209.55.62:3000/get-token'
         );
       
         const authUrl = oAuth2Client.generateAuthUrl({
