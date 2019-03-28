@@ -11,10 +11,11 @@ var constant = {
         client_secret: '7YWjTs0glqMYQHFNWWMToxPy'
     },
     devprod() {
+        console.log(process.env.NODE_ENV);
         if (process.env.NODE_ENV == 'production') {
-            this.base_url = 'http://liftpass.io';
+            constant.base_url = 'http://liftpass.io';
         } else {
-            this.base_url = 'http://localhost:3000';
+            constant.base_url = 'http://localhost:3000';
         }
     }
 };
