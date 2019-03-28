@@ -50,7 +50,7 @@ module.exports = {
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
-            process.env.NODE_ENV == 'development' ? 'http://localhost:3000/get-token' : 'http://134.209.55.62:3000/get-token'
+            process.env.NODE_ENV == 'development' ? 'http://localhost:3000/get-token' : 'http://localhost:3000/get-token'
         );
       
         const authUrl = oAuth2Client.generateAuthUrl({
