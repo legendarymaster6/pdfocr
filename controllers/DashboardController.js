@@ -65,7 +65,7 @@ module.exports = {
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret,
-            'http://localhost:3000/get-token'
+            `${ constant.base_url }/get-token`
         );
 
         return new Promise((resolve, reject) => {
@@ -103,7 +103,7 @@ module.exports = {
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
-            'http://localhost:3000/get-token'
+            `${ constant.base_url }/get-token`
         );
 
         var token;
@@ -231,9 +231,11 @@ module.exports = {
                 let p = Promise.resolve();
                 for (let rule of rules) {
                     p = p.then(() => {
+                            console.log(rule.text);
                             return google_drive_api.get_files(incoming_id, rule.text, rule.is_contained)
                         })
                         .then(files => {
+                            console.log(files);
                             var push_folder = output_id;
                             if (rule.destination) {
                                 var dest_id = google_drive_api.get_folder_id(folders, rule.destination);
@@ -289,7 +291,7 @@ module.exports = {
                         status: 'ok'
                     })
             })
-            .then(err => {
+            .catch(err => {
                 console.log(err);
                 return res.send({
                     status: 'error'

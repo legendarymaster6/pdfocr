@@ -7,7 +7,7 @@ module.exports = {
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
-            'http://localhost:3000/get-token'
+            `${ constant.base_url }/get-token`
         );
 
         var token;
