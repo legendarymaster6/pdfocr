@@ -47,6 +47,9 @@ module.exports = {
                     }
                     folder.path = path;
                 }
+                folders.sort((a, b) => {
+                    return a.path < b.path ? -1 : 1;
+                });
                 return folders;
             })
             .catch(err => {

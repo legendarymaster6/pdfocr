@@ -191,12 +191,20 @@
                 <a href="/authorize" class="waves-effect waves-light btn">{{ has_token ? 'Reauthorize' : 'Authorize' }}</a>
             </div>
             <div class="input-field col s6" style="margin-top: 50px">
-                <input placeholder="Please enter Google drive folder" id="incoming_folder" type="text" value="{{ incoming_folder }}">
-                <label for="incoming_folder">Incoming Folder</label>
+                <span>Incoming Folder</span>
+                <select id="incoming_folder" class="browser-default" value="{{ incoming_folder }}">
+                    {% for folder in folders %}
+                    <option value="{{ folder.path }}" {{ incoming_folder == folder.path ? 'selected' : '' }}>{{ folder.path }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="input-field col s6" style="margin-top: 50px">
-                <input placeholder="Please enter Google drive folder" id="output_folder" type="text" value="{{ output_folder }}">
-                <label for="output_folder">Default Output Folder</label>
+                <span>Default Output Folder</span>
+                <select id="output_folder" class="browser-default" value="{{ output_folder }}">
+                    {% for folder in folders %}
+                    <option value="{{ folder.path }}" {{ output_folder == folder.path ? 'selected' : '' }}>{{ folder.path }}</option>
+                    {% endfor %}
+                </select>
             </div>
             <div class="input-field col s6">
                 <button class="waves-effect waves-light btn" onclick="home.save_folder()">Save</button>
@@ -260,7 +268,11 @@
                     </div>
                     <div style="display: flex; line-height: 46px;">
                         move to
-                        <input id="destination" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                        <select id="destination" class="browser-default" style="width: 200px; margin-left: 10px; margin-right: 10px;">
+                            {% for folder in folders %}
+                            <option value="{{ folder.path }}">{{ folder.path }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
                 <div class="input-field col s12">
@@ -290,7 +302,11 @@
                     </div>
                     <div style="display: flex; line-height: 46px;">
                         move to
-                        <input id="edit_dest" class="active" type="text" style="width: 200px; margin-left: 10px; margin-right: 10px;" placeholder="Select Destination">
+                        <select id="edit_dest" class="browser-default" style="width: 200px; margin-left: 10px; margin-right: 10px;">
+                            {% for folder in folders %}
+                            <option value="{{ folder.path }}">{{ folder.path }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
                 <div class="input-field col s12">

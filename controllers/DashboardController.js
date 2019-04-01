@@ -19,16 +19,18 @@ module.exports = {
                             user_id: req.session.user_id,
                         },
                         order: ['index']
-                    })
+                    }),
+                    req.glob.user.google_token ? google_drive_api.get_folders(req.glob.user.google_token) : []
                 ]
             })
-            .spread((user, rules) => {
+            .spread((user, rules, folders) => {
                 return res
                     .render('dashboard/home', {
                         has_token: user.google_token ? true : false,
                         incoming_folder: user.input_folder ? user.input_folder : '',
                         output_folder: user.output_folder ? user.output_folder : '',
-                        rules
+                        rules,
+                        folders
                     });
             })
             .catch(err => {
