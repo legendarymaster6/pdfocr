@@ -4,12 +4,14 @@
     <title>PDF OCR</title>
 
     <meta name="language" content="en">
+    <meta name="google-signin-client_id" content="{{ constant.googleapi.client_id }}">
 
     {% block head %}
         <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.4/jquery.js"></script>
         <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+        <script src="https://apis.google.com/js/platform.js"></script>
 
         <script>
             // remodal globals

@@ -23,6 +23,7 @@
                     },
                     function(data) {
                         if (data.status == 'error') {
+                            alert(data.payload.message);
                             return;
                         }
                         alert('succesfully saved!');
@@ -65,6 +66,7 @@
                     },
                     function(data) {
                         if (data.status == 'error') {
+                            alert(data.payload.message);
                             return;
                         }
                         location = location.href;
@@ -90,6 +92,7 @@
                         home.modal_create_rule.close();
                         location = location.href
                         if (data.status == 'error') {
+                            alert(data.payload.message);
                             return;
                         }
                     }
@@ -109,6 +112,7 @@
                     },
                     function(data) {
                         if (data.status == 'error') {
+                            alert(data.payload.message);
                             return;
                         }
                         location = location.href;
@@ -126,6 +130,7 @@
                     },
                     function(data) {
                         if (data.status == 'error') {
+                            alert(data.payload.message);
                             return;
                         }
                         location = location.href;
@@ -140,8 +145,36 @@
                     {},
                     function(data) {
                         $('#preloader').hide();
+                        if (data.status == 'error') {
+                            alert(data.payload.message);
+                            return;
+                        }
                     }
                 )
+            },
+
+            delete_rule: function(shft) {
+                var sorting_rule = $(shft).closest('.sorting_rule');
+                rule_id = sorting_rule.attr('data-id');
+                if (confirm('Are you sure delete this?')) {
+                    $.post(
+                        '/delete-rule',
+                        {
+                            rule_id: rule_id
+                        },
+                        function(data) {
+                            if (data.status == 'error') {
+                                alert(data.payload.message);
+                                return;
+                            }
+                            location = location.href;
+                        }
+                    )
+                }
+            },
+
+            sign_out: function() {
+                location.href = '/logout';
             }
         };  
 
@@ -152,6 +185,9 @@
     <div class="container">
         <div class="row" style="margin-top: 50px">
             <div class="col s12">
+                <a class="waves-effect waves-light btn" onclick="home.sign_out()">Sign Out</a>
+            </div>
+            <div class="col s12"  style="margin-top: 50px">
                 <a href="/authorize" class="waves-effect waves-light btn">{{ has_token ? 'Reauthorize' : 'Authorize' }}</a>
             </div>
             <div class="input-field col s6" style="margin-top: 50px">
@@ -181,6 +217,7 @@
                 <div style="display: flex;">
                     <h4 class="rule_name">{{ rule.name }}</h4>
                     <a onclick="home.open_edit(this)" style="cursor: pointer;"><i class="material-icons" style="margin-top: 30px; margin-left: 10px;">edit</i></a>
+                    <a onclick="home.delete_rule(this)" style="cursor: pointer;"><i class="material-icons" style="margin-top: 30px; margin-left: 10px;">delete</i></a>
                 </div>
                 <div style="display: flex; line-height: 46px;">If the file 
                     <div style="width: 100px; margin-left: 10px; margin-right: 10px;">

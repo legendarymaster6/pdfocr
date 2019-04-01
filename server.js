@@ -1,7 +1,7 @@
 var twig = require("twig");
 var express = require('express');
 var bodyParser = require('body-parser');
-var session = require('express-session');
+var session = require('cookie-session');
 var cors = require('cors')
 var multer = require('multer');
 
@@ -20,13 +20,14 @@ app.use(bodyParser.json());
 app.use(cors());
 app.use(express.static('assets'))
 
-app.use(session({ secret: 'conduit', cookie: { maxAge: 60000 }, resave: false, saveUninitialized: false  }));
+app.use(session({name: 'session', secret: 'wer234sjdfj234oiudfieroj', maxAge: 180 * 24 * 60 * 60 * 1000}));
 
 app.use(require('./routes'));
 
 app.set('views', './views');
 app.set('view engine', 'twig');
 app.set("view options", { layout: false });
+app.locals.constant = constant;
 
 var server = app.listen( process.env.PORT || 3000, function() {
     console.log('Listening on port ' + server.address().port);

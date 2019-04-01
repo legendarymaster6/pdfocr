@@ -2,18 +2,16 @@ const moment = require('moment');
 
 module.exports = function(sequelize, DataTypes) {
     return sequelize
-        .define('rules', {
-            rule_id: {
+        .define('users', {
+            user_id: {
                 type: DataTypes.INTEGER,
                 primaryKey: true,
                 autoIncrement: true
             },
-            user_id: DataTypes.INTEGER,
-            name: DataTypes.STRING(64),
-            is_contained: DataTypes.INTEGER,
-            text: DataTypes.STRING(256),
-            destination: DataTypes.STRING(256),
-            index: DataTypes.INTEGER,
+            google_id: DataTypes.STRING(64),
+            google_token: DataTypes.TEXT,
+            input_folder: DataTypes.STRING(256),
+            output_folder: DataTypes.STRING(256),
             created_at: DataTypes.DATE,
             updated_at: DataTypes.DATE
         },
@@ -30,6 +28,5 @@ module.exports = function(sequelize, DataTypes) {
                     instance.updated_at = moment().format('YYYY-MM-DD HH:mm:ss');
                 }
             }
-
         });
 };

@@ -3,33 +3,19 @@
 const { google } = require('googleapis');
 
 module.exports = {
-    get_drive_object() {
+    get_drive_object(token) {
         const oAuth2Client = new google.auth.OAuth2(
             constant.googleapi.client_id, 
             constant.googleapi.client_secret, 
             `${ constant.base_url }/get-token`
         );
 
-        var token;
-        return db.systemconfigs.find_one({
-                where: {
-                    ref_id: constant.systemconfigs.ref_id.token,
-                }
-            })
-            .then(systemconfig => {
-                if (!systemconfig) return null;
-                token = systemconfig.value;
-                oAuth2Client.setCredentials(JSON.parse(token));
-                return google.drive({version: 'v3', auth: oAuth2Client});
-            })
-            .catch(err => {
-                console.log(err);
-                return null;
-            });
+        oAuth2Client.setCredentials(JSON.parse(token));
+        return Promise.resolve(google.drive({version: 'v3', auth: oAuth2Client}));
     },
 
-    get_folders() {
-        return this.get_drive_object()
+    get_folders(token) {
+        return this.get_drive_object(token)
             .then(drive => {
                 return new Promise((resolve, reject) => {
                         drive.files.list({
@@ -78,8 +64,8 @@ module.exports = {
         return null;
     },
 
-    get_files(folder_id, text = '', is_contained = 0) {
-        return this.get_drive_object()
+    get_files(token, folder_id, text = '', is_contained = 0) {
+        return this.get_drive_object(token)
             .then(drive => {
                 let query = `mimeType != 'application/vnd.google-apps.folder' and ('${folder_id}' in parents)`;
                 if (text) {
@@ -102,8 +88,8 @@ module.exports = {
             })
     },
 
-    move_file(file_id, from_folder_id, to_folder_id) {
-        return this.get_drive_object()
+    move_file(token, file_id, from_folder_id, to_folder_id) {
+        return this.get_drive_object(token)
             .then(drive => {
                 return new Promise((resolve, reject) => {
                         drive.files.update({

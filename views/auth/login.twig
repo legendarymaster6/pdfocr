@@ -1,0 +1,35 @@
+{% extends '../master.twig' %}
+{% block content %}
+<script>
+    var login = {
+        on_signin: function(user) {
+            var id_token = user.getAuthResponse().id_token;
+            $.post(
+                '/login',
+                {
+                    id_token: id_token
+                },
+                function(data) {
+                    if (data.status == 'error') {
+                        alert(data.payload.message);
+                        return;
+                    }
+                    location.href = '/';
+                }
+            )
+        }
+    };
+
+    function onSignIn(googleUser) {
+        login.on_signin(googleUser);
+    }
+    window.onbeforeunload = function(e){
+        gapi.auth2.getAuthInstance().signOut();
+    };
+</script>
+<div class="row">
+    <div class="col s12" style="margin-top: 20px;">
+        <div class="g-signin2" data-onsuccess="onSignIn"></div>
+    </div>
+</div>
+{% endblock %}

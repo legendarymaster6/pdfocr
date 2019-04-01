@@ -2,36 +2,12 @@
 var express = require('express');
 var router = express.Router();
 
-// var DocumentsController = require('./controllers/DocumentsController');
-// var ParsersController = require('./controllers/ParsersController');
-// router.get('/', function(req, res, next) {
-//     console.log('first middleware');
-//     next();
-// }, function(req, res, next) {
-//     console.log('second middleware');
-//     next();
-// }, function(req, res, next) {
-//     console.log('third middleware');
-//     next();
-// }, function (req, res) {
-//     res.send('Hello MedlexAI!!!');
-// });
-
-// router.get('/documents', DocumentsController.get_documents);
-// router.get('/documents/get_stats', DocumentsController.get_documents_stats);
-// router.get('/documents/:document_id/get_pages', DocumentsController.get_pages);
-// router.post('/documents/upload', upload.single('file'), DocumentsController.upload_file)
-// router.get('/documents/:id', DocumentsController.get_document);
-// router.post('/documents/:document_id/save_boundaries', DocumentsController.save_boundaries);
-// router.get('/documents/:document_id/extract_data', DocumentsController.extract_data);
-// router.get('/documents/:document_id/export', DocumentsController.export);
-
-// router.get('/parsers', ParsersController.get_parsers);
-// router.post('/parsers', ParsersController.create_parser);
-// router.get('/parsers/:id', ParsersController.get_parser);
-// router.post('/parsers/:id', ParsersController.update_parser);
-
 var DashboardController = require('./controllers/DashboardController');
+var AuthController = require('./controllers/AuthController');
+
+var policies = require('./policies');
+
+router.use(policies.common);
 
 router.get('/', DashboardController.home);
 router.get('/authorize', DashboardController.authorize);
@@ -42,7 +18,11 @@ router.get('/categorization', DashboardController.categorization);
 
 router.post('/update-rule', DashboardController.update_rule);
 router.post('/create-rule', DashboardController.create_rule);
+router.post('/delete-rule', DashboardController.delete_rule);
 router.post('/move-rule-up', DashboardController.move_rule_up);
 router.post('/move-rule-down', DashboardController.move_rule_down);
+
+router.all('/login', AuthController.login);
+router.get('/logout', AuthController.logout);
 
 module.exports = router;

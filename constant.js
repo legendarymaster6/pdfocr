@@ -11,7 +11,6 @@ var constant = {
         client_secret: '7YWjTs0glqMYQHFNWWMToxPy'
     },
     devprod() {
-        console.log(process.env.NODE_ENV);
         if (process.env.NODE_ENV == 'production') {
             constant.base_url = 'http://liftpass.io';
         } else {

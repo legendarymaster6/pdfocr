@@ -9,34 +9,27 @@ module.exports = {
         return q.fcall(() => {})
             .then(() => {
                 return [
-                    db.systemconfigs.find_one({
+                    db.users.find_one({
                         where: {
-                            ref_id: constant.systemconfigs.ref_id.token,
-                        }
-                    }),
-                    db.systemconfigs.find_one({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.incoming_folder,
-                        }
-                    }),
-                    db.systemconfigs.find_one({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.output_folder,
+                            user_id: req.session.user_id,
                         }
                     }),
                     db.rules.find_all({
+                        where: {
+                            user_id: req.session.user_id,
+                        },
                         order: ['index']
                     })
                 ]
             })
-            .spread((token, incoming_folder, output_folder, rules) => {                
+            .spread((user, rules) => {
                 return res
-                .render('dashboard/home', {
-                    has_token: token ? true : false,
-                    incoming_folder: incoming_folder ? incoming_folder.value : '',
-                    output_folder: output_folder ? output_folder.value : '',
-                    rules
-                });
+                    .render('dashboard/home', {
+                        has_token: user.google_token ? true : false,
+                        incoming_folder: user.input_folder ? user.input_folder : '',
+                        output_folder: user.output_folder ? user.output_folder : '',
+                        rules
+                    });
             })
             .catch(err => {
                 console.log(err);
@@ -67,7 +60,7 @@ module.exports = {
             constant.googleapi.client_secret,
             `${ constant.base_url }/get-token`
         );
-
+            
         return new Promise((resolve, reject) => {
                 oAuth2Client.getToken(code, (err, token) => {
                     if (err) reject(err);
@@ -75,21 +68,9 @@ module.exports = {
                 })
             })
             .then(token => {
-                console.log(token);
-                return db.systemconfigs.find_or_create({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.token,
-                        },
-                        defaults: {
-                            value: JSON.stringify(token)
-                        }
-                    })
-                    .spread((systemconfig, created) => {
-                        if (created) return null;
-                        systemconfig.value = JSON.stringify(token);
-                        return systemconfig.save();
-                    })
-                    .then(() => {
+                req.glob.user.google_token = JSON.stringify(token);
+                return req.glob.user.save()
+                    .then(user => {
                         return res.redirect('/');
                     });
             })
@@ -147,34 +128,9 @@ module.exports = {
     update_folder(req, res) {
         var { incoming_folder, output_folder } = req.body;
 
-        return db.systemconfigs.find_or_create({
-                where: {
-                    ref_id: constant.systemconfigs.ref_id.incoming_folder,
-                },
-                defaults: {
-                    value: incoming_folder
-                }
-            })
-            .spread((systemconfig, created) => {
-                if (created) return null;
-                systemconfig.value = incoming_folder;
-                return systemconfig.save();
-            })
-            .then(() => {
-                return db.systemconfigs.find_or_create({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.output_folder,
-                        },
-                        defaults: {
-                            value: output_folder
-                        }
-                    })
-            })
-            .spread((systemconfig, created) => {
-                if (created) return null;
-                systemconfig.value = output_folder;
-                return systemconfig.save();
-            })
+        req.glob.user.input_folder = incoming_folder;
+        req.glob.user.output_folder = output_folder;
+        return req.glob.user.save()
             .then(() => {
                 return res
                     .send({
@@ -183,41 +139,42 @@ module.exports = {
             })
             .catch(err => {
                 console.log(err);
-                return res
-                    .send({
-                        status: 'error'
-                    })
-            });
+                return res.send({
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
+            })
     },
 
     categorization(req, res) {
         var incoming_folder, output_folder;
         var incoming_id, output_id;
+        var token = req.glob.user.google_token;
+        if (!token) {
+            return res.send({
+                status: 'error',
+                payload: {
+                    message: 'Please authorize your drive first'
+                }
+            });
+        }
         return q.fcall(() => {})
             .then(() => {
                 return [
-                    db.systemconfigs.find_one({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.incoming_folder,
-                        }
-                    }),
-                    db.systemconfigs.find_one({
-                        where: {
-                            ref_id: constant.systemconfigs.ref_id.output_folder,
-                        }
-                    }),
-                    google_drive_api.get_folders(),
+                    google_drive_api.get_folders(token),
                     db.rules.find_all({
                         order: ['index']
                     })
                 ]
             })
-            .spread((incoming, output, folders, rules) => {
-                if (!incoming || !output) {
-                    throw 'Action not allowed';
+            .spread((folders, rules) => {
+                incoming_folder = req.glob.user.input_folder;
+                output_folder = req.glob.user.output_folder;
+                if (!incoming_folder || !output_folder) {
+                    throw 'Please input imcoming and output folders';
                 }
-                incoming_folder = incoming.value;
-                output_folder = output.value;
                 incoming_id = google_drive_api.get_folder_id(folders, incoming_folder);
                 output_id = google_drive_api.get_folder_id(folders, output_folder);
                 if (!incoming_id) {
@@ -232,13 +189,13 @@ module.exports = {
                 for (let rule of rules) {
                     p = p.then(() => {
                             console.log(rule.text);
-                            return google_drive_api.get_files(incoming_id, rule.text, rule.is_contained)
+                            return google_drive_api.get_files(token, incoming_id, rule.text, rule.is_contained)
                         })
                         .then(files => {
                             console.log(files);
                             var push_folder = output_id;
                             if (rule.destination) {
-                                var dest_id = google_drive_api.get_folder_id(folders, rule.destination);
+                                var dest_id = google_drive_api.get_folder_id(token, folders, rule.destination);
                                 if (dest_id) {
                                     push_folder = dest_id;
                                 }
@@ -246,7 +203,7 @@ module.exports = {
                             let chain = Promise.resolve();
                             for (let file of files) {
                                 chain = chain.then(() => {
-                                    return google_drive_api.move_file(file.id, file.parents[0], push_folder)
+                                    return google_drive_api.move_file(token, file.id, file.parents[0], push_folder)
                                 });
                             }
                             return chain;
@@ -264,7 +221,7 @@ module.exports = {
                 return res.send({
                     status: 'error',
                     payload: {
-                        message: error.message || error
+                        message: err.message || err
                     }
                 });
             })
@@ -275,6 +232,7 @@ module.exports = {
 
         return db.rules.find_one({
                 where: {
+                    user_id: req.session.user_id,
                     rule_id
                 }
             })
@@ -294,16 +252,53 @@ module.exports = {
             .catch(err => {
                 console.log(err);
                 return res.send({
-                    status: 'error'
-                })
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
+            })
+    },
+
+    delete_rule(req, res) {
+        var { rule_id } = req.body;
+        if (!rule_id) {
+            return res.send({
+                status: 'error',
+                payload: {
+                    message: 'Action not allow'
+                }
+            });
+        }
+        return db.rules.destroy({
+                where: {
+                    rule_id: rule_id
+                }
+            })
+            .then(rule => {
+                return res.send({ status: 'ok' })
+            })
+            .catch(err => {
+                console.log(err);
+                return res.send({
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
             })
     },
 
     create_rule(req, res) {
         var { name, is_contained, text, destination } = req.body;
-        return db.rules.count()
+        return db.rules.count({
+                where: {
+                    user_id: req.session.user_id,
+                }
+            })
             .then(count => {
                 return db.rules.create({
+                        user_id: req.session.user_id,
                         name,
                         is_contained,
                         text,
@@ -317,11 +312,14 @@ module.exports = {
                     payload: rule
                 })
             })
-            .then(err => {
+            .catch(err => {
                 console.log(err);
                 return res.send({
-                    status: 'error'
-                })
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
             })
     },
 
@@ -337,6 +335,7 @@ module.exports = {
                 if (rule.index == 1) throw 'Action not allowed';
                 return db.rules.find_one({
                         where: {
+                            user_id: req.session.user_id,
                             index: rule.index - 1
                         }
                     })
@@ -355,8 +354,11 @@ module.exports = {
             .catch(err => {
                 console.log(err);
                 return res.send({
-                    status: 'error'
-                })
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
             })
     },
 
@@ -371,6 +373,7 @@ module.exports = {
             .then(rule => {
                 return db.rules.find_one({
                         where: {
+                            user_id: req.session.user_id,
                             index: rule.index + 1
                         }
                     })
@@ -390,8 +393,11 @@ module.exports = {
             .catch(err => {
                 console.log(err);
                 return res.send({
-                    status: 'error'
-                })
+                    status: 'error',
+                    payload: {
+                        message: err.message || err
+                    }
+                });
             })
     }
 
