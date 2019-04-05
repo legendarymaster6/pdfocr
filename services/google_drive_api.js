@@ -19,7 +19,7 @@ module.exports = {
             .then(drive => {
                 return new Promise((resolve, reject) => {
                         drive.files.list({
-                            pageSize: 10,
+                            pageSize: 1000,
                             fields: 'nextPageToken, files(id, name, parents)',
                             q: "mimeType='application/vnd.google-apps.folder'",
                             spaces: 'drive',
@@ -76,7 +76,7 @@ module.exports = {
                 }
                 return new Promise((resolve, reject) => {
                         drive.files.list({
-                            pageSize: 10,
+                            pageSize: 1000,
                             fields: 'nextPageToken, files(id, name, parents)',
                             q: query,
                             spaces: 'drive',
