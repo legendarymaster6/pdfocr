@@ -167,6 +167,9 @@ module.exports = {
                 return [
                     google_drive_api.get_folders(token),
                     db.rules.find_all({
+                        where: {
+                            user_id: req.session.user_id
+                        },
                         order: ['index']
                     })
                 ]
@@ -197,7 +200,7 @@ module.exports = {
                             console.log(files);
                             var push_folder = output_id;
                             if (rule.destination) {
-                                var dest_id = google_drive_api.get_folder_id(token, folders, rule.destination);
+                                var dest_id = google_drive_api.get_folder_id(folders, rule.destination);
                                 if (dest_id) {
                                     push_folder = dest_id;
                                 }
@@ -211,6 +214,21 @@ module.exports = {
                             return chain;
                         });
                 }
+                // go to default folder
+                p = p.then(() => {
+                        return google_drive_api.get_files(token, incoming_id);
+                    })
+                    .then(files => {
+                        console.log(files);
+                        var push_folder = output_id;
+                        let chain = Promise.resolve();
+                        for (let file of files) {
+                            chain = chain.then(() => {
+                                return google_drive_api.move_file(token, file.id, file.parents[0], push_folder)
+                            });
+                        }
+                        return chain;
+                    });
                 return p;
             })
             .then(() => {
@@ -264,6 +282,7 @@ module.exports = {
 
     delete_rule(req, res) {
         var { rule_id } = req.body;
+        var delete_index;
         if (!rule_id) {
             return res.send({
                 status: 'error',
@@ -272,12 +291,38 @@ module.exports = {
                 }
             });
         }
-        return db.rules.destroy({
+        return db.rules.find_one({
                 where: {
                     rule_id: rule_id
                 }
             })
             .then(rule => {
+                delete_index = rule.index;
+                return rule.destroy();
+            })
+            .then(_ => {
+                console.log(delete_index);
+                return db.rules.find_all({
+                        where: {
+                            user_id: req.session.user_id,
+                            index: {
+                                $gt: delete_index
+                            }                            
+                        }
+                    })
+                    .then(rules => {
+                        let p = Promise.resolve();
+                        for (let rule of rules) {
+                            console.log('rule_id', rule.rule_id);
+                            p = p.then(() => {
+                                    rule.index = rule.index - 1;
+                                    return rule.save();
+                                });
+                        }
+                        return p;
+                    })
+            })
+            .then(_ => {
                 return res.send({ status: 'ok' })
             })
             .catch(err => {
