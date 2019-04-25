@@ -13,7 +13,7 @@ router.get('/', DashboardController.home);
 router.get('/authorize', DashboardController.authorize);
 router.get('/get-token', DashboardController.get_token);
 router.get('/list-files', DashboardController.list_files);
-router.post('/update-folder', DashboardController.update_folder);
+router.post('/update-user-config', DashboardController.update_user_config);
 router.get('/categorization', DashboardController.categorization);
 
 router.post('/update-rule', DashboardController.update_rule);

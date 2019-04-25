@@ -14,12 +14,13 @@
                 });
             },
 
-            save_folder: function() {
+            save_user_config: function() {
                 $.post(
-                    '/update-folder',
+                    '/update-user-config',
                     {
                         incoming_folder: $('#incoming_folder').val(),
-                        output_folder: $('#output_folder').val()
+                        output_folder: $('#output_folder').val(),
+                        runs_per_day: $('#runs_per_day').val(),
                     },
                     function(data) {
                         if (data.status == 'error') {
@@ -206,8 +207,17 @@
                     {% endfor %}
                 </select>
             </div>
-            <div class="input-field col s6">
-                <button class="waves-effect waves-light btn" onclick="home.save_folder()">Save</button>
+            <div class="input-field col s6" style="margin-top: 20px">
+                <span>Runs Per Day</span>
+                <select id="runs_per_day" class="browser-default" value="{{ runs_per_day }}">
+                    <option value="0" {{ runs_per_day == 0 ? 'selected' : '' }}>None</option>
+                    <option value="1" {{ runs_per_day == 1 ? 'selected' : '' }}>1</option>
+                    <option value="2" {{ runs_per_day == 2 ? 'selected' : '' }}>2</option>
+                    <option value="3" {{ runs_per_day == 3 ? 'selected' : '' }}>3</option>
+                </select>
+            </div>
+            <div class="input-field col s12">
+                <button class="waves-effect waves-light btn" onclick="home.save_user_config()">Save</button>
             </div>
         </div>
         <div class="row" style="margin-top: 50px">

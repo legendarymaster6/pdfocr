@@ -29,6 +29,7 @@ module.exports = {
                         has_token: user.google_token ? true : false,
                         incoming_folder: user.input_folder ? user.input_folder : '',
                         output_folder: user.output_folder ? user.output_folder : '',
+                        runs_per_day: user.runs_per_day || 0,
                         rules,
                         folders
                     });
@@ -127,11 +128,12 @@ module.exports = {
             })
     },
 
-    update_folder(req, res) {
-        var { incoming_folder, output_folder } = req.body;
+    update_user_config(req, res) {
+        var { incoming_folder, output_folder, runs_per_day } = req.body;
 
         req.glob.user.input_folder = incoming_folder;
         req.glob.user.output_folder = output_folder;
+        req.glob.user.runs_per_day = runs_per_day;
         return req.glob.user.save()
             .then(() => {
                 return res
