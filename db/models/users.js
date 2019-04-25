@@ -12,6 +12,7 @@ module.exports = function(sequelize, DataTypes) {
             google_token: DataTypes.TEXT,
             input_folder: DataTypes.STRING(256),
             output_folder: DataTypes.STRING(256),
+            runs_per_day: DataTypes.INTEGER,
             created_at: DataTypes.DATE,
             updated_at: DataTypes.DATE
         },

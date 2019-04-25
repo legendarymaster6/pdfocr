@@ -11,5 +11,8 @@ module.exports = {
             underscored: true,
             timestamps: false
         }
+    },
+    servers: {
+        dispenserd: '127.0.0.1'
     }
 }

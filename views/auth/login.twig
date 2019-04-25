@@ -14,7 +14,11 @@
                         alert(data.payload.message);
                         return;
                     }
-                    location.href = '/';
+                    if (!data.payload.has_token) {
+                        location.href = '/authorize';
+                    } else {
+                        location.href = '/';
+                    }
                 }
             )
         }

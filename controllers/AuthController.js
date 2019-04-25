@@ -27,7 +27,10 @@ module.exports = {
                     .spread((user, created) => {
                         req.session.user_id = user.user_id;
                         return res.send({
-                            status: 'ok'
+                            status: 'ok',
+                            payload: {
+                                has_token: user.google_token != null,
+                            }
                         });
                     });
             })
