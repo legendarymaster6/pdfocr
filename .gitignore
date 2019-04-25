@@ -1,3 +1,4 @@
 /node_modules
 /google_api/credentials.json
 /db/migrations/config.json
+/config.js
